@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build & Output directories
+dist/
+build/
+.next/
+out/
+.astro/
+temp/
+tmp/
+.tempmediaStorage/
+
+# Environment Variables & Secrets (CRITICAL)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Project specific temporary uploads/scratch
+*.tmp

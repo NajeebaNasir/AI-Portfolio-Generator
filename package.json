@@ -1,0 +1,25 @@
+{
+  "name": "portfolio-generator-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=apps/server",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev": "npm run dev:all",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "keywords": [
+    "portfolio-generator",
+    "ai-agent",
+    "groq",
+    "vite",
+    "react"
+  ],
+  "author": "Lead AI Architect",
+  "license": "MIT"
+}
