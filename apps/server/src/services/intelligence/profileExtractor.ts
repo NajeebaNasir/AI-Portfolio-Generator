@@ -207,12 +207,19 @@ export function normalizeExtracted(raw: any, cleanText: string): CanonicalProfil
   // --- Personal ---
   const emailMatch = cleanText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
   const phoneMatch = cleanText.match(/(\+?\d[\d\s\-().]{7,}\d)/);
-  // Profile-level GitHub/LinkedIn: only from the top 20 lines (header area) to avoid
-  // accidentally picking up a project repo URL as the profile link.
-  const headerText = lines.slice(0, 20).join('\n');
-  const githubProfileMatch = headerText.match(/https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_-]+(?:\/)?(?!\S)/i);
-  const linkedinMatch = headerText.match(/https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_%-]+/i);
-  const websiteMatch = headerText.match(/https?:\/\/(?!github\.com)(?!linkedin\.com)[a-zA-Z0-9_-]+\.[a-zA-Z]{2,}[^\s]*/i);
+  // Profile-level GitHub/LinkedIn: search across full cleanText (including extracted PDF link annotations)
+  const githubProfileMatch = cleanText.match(/https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_-]+(?:\/)?(?!\S)/i);
+  const linkedinMatch = cleanText.match(/https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_%-]+/i);
+  const websiteMatch = cleanText.match(/https?:\/\/(?!github\.com)(?!linkedin\.com)[a-zA-Z0-9_-]+\.[a-zA-Z]{2,}[^\s]*/i);
+
+  // Collect all embedded project demo URLs (excluding linkedin and profile github)
+  const allEmbeddedUrls = (cleanText.match(/https?:\/\/[^\s\)\>\<\,\]\"'\\]+/gi) || []).map(u => u.trim());
+  const projectDemoUrls = allEmbeddedUrls.filter(u => 
+    !u.includes('linkedin.com') && 
+    !u.includes('mailto:') && 
+    u !== (githubProfileMatch ? githubProfileMatch[0] : '') &&
+    !u.endsWith('/Portfolio/')
+  );
 
   let name = typeof raw?.personal?.name === 'string' && raw.personal.name.trim().length > 1
     ? raw.personal.name.trim()
@@ -285,6 +292,12 @@ export function normalizeExtracted(raw: any, cleanText: string): CanonicalProfil
             lines,
             allLineUrls
           );
+          let liveUrl = (typeof p.liveUrl === 'string' && p.liveUrl.trim()) ? p.liveUrl.trim() : inlineUrls.liveUrl;
+          // Fall back to matched embedded project demo URL if available
+          if (!liveUrl && projectDemoUrls[idx]) {
+            liveUrl = projectDemoUrls[idx];
+          }
+
           return {
             id:          p.id || `proj_${idx + 1}_${uuidv4().substring(0, 6)}`,
             name:        typeof p.name        === 'string' && p.name.trim()        ? p.name.trim()        : `Project ${idx + 1}`,
@@ -298,7 +311,7 @@ export function normalizeExtracted(raw: any, cleanText: string): CanonicalProfil
               : [],
             // LLM-extracted URL wins; fall back to deterministic inline detection only
             githubUrl: (typeof p.githubUrl === 'string' && p.githubUrl.trim()) ? p.githubUrl.trim() : inlineUrls.githubUrl,
-            liveUrl:   (typeof p.liveUrl   === 'string' && p.liveUrl.trim())   ? p.liveUrl.trim()   : inlineUrls.liveUrl,
+            liveUrl:   liveUrl,
           };
         })
         .filter((p: any) => p.name !== `Project ${0 + 1}` || p.description) // drop nameless + empty

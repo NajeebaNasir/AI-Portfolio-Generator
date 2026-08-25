@@ -10,14 +10,11 @@ export class GroqProvider implements ILlmProvider {
 
   // Ranked capability hierarchy (prioritizing models with high TPM limits and fast JSON responses)
   private readonly MODEL_PRIORITY_RANKING = [
-    'groq/compound-mini',
-    'openai/gpt-oss-20b',
     'llama-3.1-8b-instant',
     'llama-3.3-70b-versatile',
-    'groq/compound',
-    'openai/gpt-oss-120b',
-    'qwen/qwen3.6-27b',
+    'groq/compound-mini',
     'mixtral-8x7b-32768',
+    'gemma2-9b-it',
   ];
 
   constructor(apiKey?: string) {

@@ -3,21 +3,47 @@ import pdf from 'pdf-parse';
 export class PdfParser {
   public static async parse(buffer: Buffer): Promise<string> {
     try {
+      const extractedUrls: string[] = [];
+
       const data = await pdf(buffer, {
-        pagerender: (pageData: any) => {
-          return pageData.getTextContent({ normalizeWhitespace: true }).then((textContent: any) => {
-            return PdfParser.renderPage(textContent);
-          });
+        pagerender: async (pageData: any) => {
+          try {
+            const annotations = await pageData.getAnnotations();
+            if (Array.isArray(annotations)) {
+              for (const ann of annotations) {
+                if (ann && ann.subtype === 'Link' && (ann.url || ann.unsafeUrl)) {
+                  const targetUrl = ann.url || ann.unsafeUrl;
+                  if (targetUrl && !extractedUrls.includes(targetUrl)) {
+                    extractedUrls.push(targetUrl);
+                  }
+                }
+              }
+            }
+          } catch (annErr) {
+            console.warn('[PdfParser] Could not extract page annotations:', annErr);
+          }
+
+          const textContent = await pageData.getTextContent({ normalizeWhitespace: true });
+          return PdfParser.renderPage(textContent);
         },
       });
 
-      if (!data.text || data.text.trim().length === 0) {
+      let fullText = data.text || '';
+
+      if (extractedUrls.length > 0) {
+        fullText += '\n\n---\nEmbedded PDF Links Found:\n';
+        for (const url of extractedUrls) {
+          fullText += `URL: ${url}\n`;
+        }
+      }
+
+      if (!fullText || fullText.trim().length === 0) {
         throw new Error(
           'PDF appears to be empty or consists exclusively of scanned images (OCR required).'
         );
       }
 
-      return data.text;
+      return fullText;
     } catch (err: any) {
       console.error('[PdfParser] Error parsing PDF:', err?.message || err);
       throw new Error(`Failed to extract text from PDF: ${err.message}`);
