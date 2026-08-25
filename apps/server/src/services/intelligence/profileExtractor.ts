@@ -380,6 +380,24 @@ export function normalizeExtracted(raw: any, cleanText: string): CanonicalProfil
     ? raw.achievements.filter((a: any) => typeof a === 'string' && a.trim()).map((a: string) => a.trim())
     : [];
 
+  // Fallback to deterministic parser for any section that the LLM left empty but exists in source text
+  const fallback = deterministicParse(cleanText);
+  if (experience.length === 0 && fallback.experience.length > 0) {
+    experience.push(...fallback.experience);
+  }
+  if (projects.length === 0 && fallback.projects.length > 0) {
+    projects.push(...fallback.projects);
+  }
+  if (skills.length === 0 && fallback.skills.length > 0) {
+    skills.push(...fallback.skills);
+  }
+  if (education.length === 0 && fallback.education.length > 0) {
+    education.push(...fallback.education);
+  }
+  if (certifications.length === 0 && fallback.certifications.length > 0) {
+    certifications.push(...fallback.certifications);
+  }
+
   return CanonicalProfileSchema.parse({
     personal,
     experience,

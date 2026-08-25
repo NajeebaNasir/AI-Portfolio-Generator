@@ -8,7 +8,7 @@ export class GroqProvider implements ILlmProvider {
   private discoveredModels: string[] = [];
   private isDiscovered = false;
 
-  // Ranked capability hierarchy (prioritizing models with high TPM limits and fast JSON responses)
+  // Ranked capability hierarchy (prioritizing fast models with generous TPM limits)
   private readonly MODEL_PRIORITY_RANKING = [
     'llama-3.1-8b-instant',
     'llama-3.3-70b-versatile',
