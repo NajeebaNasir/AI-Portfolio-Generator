@@ -34,9 +34,14 @@ Everything in this project follows a strict **Two-Artifact Contract** separating
 ## 🛠️ Key Work Accomplished & Fixes Applied
 
 ### 1. Groq LLM Ingestion & 413 Rate Limit Solution
-- Updated `GroqProvider.ts` with model auto-discovery (`groq/compound-mini`, `openai/gpt-oss-20b`, `llama-3.1-8b-instant`).
+- Updated `GroqProvider.ts` with model auto-discovery (`llama-3.1-8b-instant`, `llama-3.3-70b-versatile`, `groq/compound-mini`).
 - Configured token reserves to `2800` max tokens to fit strictly inside Groq Free Tier TPM limits (< 8,000 TPM) without truncating multi-section resume JSON output.
 - Added dynamic key initialization (`ensureClientInitialized`) in `GroqProvider` so `GROQ_API_KEY` is re-evaluated dynamically even if `LlmFactory` is called before environment setup.
+
+### 2. PDF Embedded Link Annotation Parser (PDFJS Integration)
+- Extended `pdfParser.ts` to parse underlying PDF Link Annotation objects (`pageData.getAnnotations()`) containing embedded URLs (`/URI`).
+- Automatically extracts candidate profile links (LinkedIn, GitHub, Portfolio) and project demo URLs (`https://codebloodeddeveloper.github.io/RAG_IMPROVISED/`, `https://vibe9452.pythonanywhere.com/`) that are hidden behind text buttons like "Project Link".
+- `profileExtractor.ts` maps extracted URLs directly to `socialLinks` and `projects[i].liveUrl` / `projects[i].githubUrl`.
 
 ### 2. Full Project Extraction Fix (All 3 Projects)
 - Updated project title regex in `profileExtractor.ts` to allow dashes, commas, slashes, pluses, hashes, and ampersands.
